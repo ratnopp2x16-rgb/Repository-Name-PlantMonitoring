@@ -18,3 +18,419 @@
 <script>const API="https://script.google.com/macros/s/AKfycbwzrVQsk_ge8mXJ9Qf7MX2MTgppwqJ_5U6ZTMViOrICkCchoU_TmxeeIF_1zMQb9rZm/exec";</script>
 <script src="js/app.js"></script>
 </body></html>
+<!doctype html>
+<html lang="id">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WPS Integrated Operational Dashboard</title>
+<style>
+:root{--blue:#075da8;--blue2:#2f80ed;--green:#16835d;--bg:#f4f7fb;--ink:#14213d;--muted:#667085;--line:#dbe5ef}
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(110deg,#063b6e,#075da8 55%,#2f80ed);color:#fff;padding:24px 30px}
+header h1{margin:0;font-size:27px} header p{margin:6px 0 0;opacity:.9}
+.nav{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);padding:12px 18px;display:flex;gap:9px;flex-wrap:wrap;box-shadow:0 4px 14px rgba(20,50,80,.07)}
+.nav button{border:0;border-radius:9px;padding:11px 16px;font-weight:700;cursor:pointer;background:#eaf2fa;color:#075da8}
+.nav button.active{background:#075da8;color:#fff}
+.nav button.home{background:#16835d;color:#fff}
+.wrap{max-width:1550px;margin:auto;padding:18px}
+.homepage{display:block}
+.hero{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 5px 20px rgba(20,50,80,.06);margin-bottom:16px}
+.hero h2{margin:0 0 8px} .hero p{margin:0;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
+.card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:20px;box-shadow:0 5px 20px rgba(20,50,80,.06);cursor:pointer;transition:.18s}
+.card:hover{transform:translateY(-3px);box-shadow:0 10px 25px rgba(20,50,80,.12)}
+.icon{font-size:30px;margin-bottom:12px} .card h3{margin:0 0 7px} .card p{font-size:12px;color:var(--muted);line-height:1.5;min-height:54px}
+.open{display:inline-block;margin-top:10px;background:#075da8;color:#fff;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:700}
+.framebox{display:none;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 5px 20px rgba(20,50,80,.06)}
+iframe{width:100%;height:calc(100vh - 125px);min-height:720px;border:0;background:#fff}
+@media(max-width:1000px){.cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.cards{grid-template-columns:1fr} header{padding:18px} .nav button{flex:1}}
+</style>
+</head>
+<body>
+<header><h1>Integrated Operational Dashboard</h1><p>PT. Wahana Prima Sejati • Refinery • Biodiesel • Fractionation • Utility</p></header>
+<div class="nav">
+<button class="home active" data-view="home" onclick="showView('home',this)">🏠 Dashboard Utama</button>
+<button data-view="refinery" onclick="showView('refinery',this)">🏭 Refinery</button>
+<button data-view="biodiesel" onclick="showView('biodiesel',this)">🧪 Biodiesel</button>
+<button data-view="fractionation" onclick="showView('fractionation',this)">⚙️ Fractionation</button>
+<button data-view="utility" onclick="showView('utility',this)">⚡ Utility</button>
+<button onclick="syncAll()" style="margin-left:auto;background:#d97706;color:#fff">↻ Sync Now</button>
+<span id="masterStatus" style="align-self:center;font-size:12px;font-weight:800;color:#c17a00">● Connecting</span>
+</div>
+<div class="wrap">
+<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+<b>AutoSync: 30 menit</b><span id="lastUpdate" style="color:var(--muted);font-size:12px">Last Update: -</span>
+</div>
+<section id="home" class="homepage">
+<div class="hero"><h2>Dashboard Operasional Terintegrasi</h2><p>Pilih dashboard di bawah. Data dibaca langsung dari Google Spreadsheet master dan diperbarui otomatis tanpa upload Excel.</p></div>
+<div class="cards">
+<div class="card" onclick="showView('refinery',document.querySelector('[data-view=refinery]'))"><div class="icon">🏭</div><h3>Refinery Daily</h3><p>Production, CPO Feed, RBDPO, PFAD, yield, running time, downtime, consumable dan operational remarks.</p><span class="open">Buka Dashboard →</span></div>
+<div class="card" onclick="showView('biodiesel',document.querySelector('[data-view=biodiesel]'))"><div class="icon">🧪</div><h3>Biodiesel Daily</h3><p>RPO Feed, FAME, crude glycerine, fatty matter, yield, chemical consumption, utility dan operational remarks.</p><span class="open">Buka Dashboard →</span></div>
+<div class="card" onclick="showView('fractionation',document.querySelector('[data-view=fractionation]'))"><div class="icon">⚙️</div><h3>Fractionation Daily</h3><p>RBDPO Feed, Olein, Stearin, yield, quality production, utility usage dan operational remarks.</p><span class="open">Buka Dashboard →</span></div>
+<div class="card" onclick="showView('utility',document.querySelector('[data-view=utility]'))"><div class="icon">⚡</div><h3>Utility Dashboard</h3><p>Boiler, clean water, RO water, ETP, power consumption, KPI utility, target vs actual dan status performance.</p><span class="open">Buka Dashboard →</span></div>
+</div></section>
+
+<section id="refinery" class="framebox"><iframe srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;id&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;
+&lt;title&gt;Production Interactive Dashboard&lt;/title&gt;
+&lt;style&gt;
+:root{--bg:#f4f7fb;--card:#fff;--ink:#132238;--muted:#687386;--blue:#075da8;--blue2:#2e86de;--green:#18845d;--red:#c64040;--amber:#c17a00;--line:#dde6f0}
+*{box-sizing:border-box}body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}header{padding:24px 30px;background:linear-gradient(110deg,#063b6e,#075da8,#2e86de);color:#fff}header h1{margin:0;font-size:26px}header p{margin:6px 0 0;opacity:.9}
+.wrap{max-width:1450px;margin:auto;padding:20px}.toolbar,.card{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 18px #183b5b0d}.toolbar{padding:14px;display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:15px}
+label{font-size:11px;color:var(--muted);font-weight:700;display:block;margin-bottom:5px}select,button{padding:10px 12px;border-radius:8px;border:1px solid #cdd9e7;background:#fff}button{border:0;background:var(--blue);color:#fff;font-weight:700;cursor:pointer}button.green{background:var(--green)}button.gray{background:#64748b}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:15px}.kpi{padding:15px}.kpi .t{font-size:12px;color:var(--muted);font-weight:700}.kpi .v{font-size:25px;font-weight:800;margin:7px 0 3px}.kpi .s{font-size:11px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:1.45fr 1fr;gap:15px;margin-bottom:15px}.card{padding:16px}h3{margin:0 0 12px;font-size:15px}canvas{width:100%;height:290px;display:block}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:9px;border-bottom:1px solid #e7edf4;text-align:right}th{background:#eef5fb}th:first-child,td:first-child{text-align:left}.badge{padding:4px 8px;border-radius:999px;font-weight:700;font-size:10px}.ok{background:#e4f6ee;color:#08734e}.bad{background:#fdeaea;color:#a72f2f}.neutral{background:#edf1f5;color:#667085}.remarks{font-size:12px;line-height:1.6;color:#445066}.status{margin-left:auto;font-size:12px;font-weight:700;color:var(--green)}.note{font-size:11px;color:var(--muted);margin-top:8px}
+@media(max-width:1050px){.kpis{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr}}@media(max-width:600px){.kpis{grid-template-columns:repeat(2,1fr)}}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;
+&lt;header&gt;&lt;h1&gt;Dashboard Performance Production&lt;/h1&gt;&lt;p&gt;PT. Wahana Prima Sejati • Refinery Daily Production&lt;/p&gt;&lt;/header&gt;&lt;div class=&quot;wrap&quot;&gt;
+&lt;div class=&quot;toolbar&quot;&gt;&lt;div&gt;&lt;label&gt;Pilih Tanggal&lt;/label&gt;&lt;select id=&quot;day&quot;&gt;&lt;/select&gt;&lt;/div&gt;
+&lt;button onclick=&quot;render()&quot;&gt;Tampilkan&lt;/button&gt;
+&lt;span id=&quot;apiBadge&quot; style=&quot;font-size:11px;font-weight:800;color:#c17a00&quot;&gt;● Connecting&lt;/span&gt;&lt;div class=&quot;status&quot; id=&quot;status&quot;&gt;Data awal workbook&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;kpis&quot; id=&quot;kpis&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;grid&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Trend Production Harian&lt;/h3&gt;&lt;canvas id=&quot;prod&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Yield vs Target&lt;/h3&gt;&lt;canvas id=&quot;yield&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;grid&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Consumable / Utility&lt;/h3&gt;&lt;canvas id=&quot;cons&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Running Time &amp; Downtime&lt;/h3&gt;&lt;canvas id=&quot;runtime&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;grid&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Daily Production Detail&lt;/h3&gt;&lt;div style=&quot;overflow:auto&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Tanggal&lt;/th&gt;&lt;th&gt;CPO Feed (MT)&lt;/th&gt;&lt;th&gt;RBDPO (MT)&lt;/th&gt;&lt;th&gt;PFAD (MT)&lt;/th&gt;&lt;th&gt;Yield RBDPO&lt;/th&gt;&lt;th&gt;Yield PFAD&lt;/th&gt;&lt;th&gt;Running (h)&lt;/th&gt;&lt;th&gt;Downtime (h)&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody id=&quot;tbody&quot;&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Operational Remarks&lt;/h3&gt;&lt;div id=&quot;remarks&quot; class=&quot;remarks&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;script&gt;
+let DATA=[]; const ORIGINAL=JSON.parse(JSON.stringify(DATA)); const $=id=&gt;document.getElementById(id);
+const fmt=(v,d=1)=&gt;v==null?&#x27;-&#x27;:Number(v).toLocaleString(&#x27;id-ID&#x27;,{maximumFractionDigits:d});
+const pct=v=&gt;v==null?&#x27;-&#x27;:(v*100).toFixed(2)+&#x27;%&#x27;;
+function setup(id){let c=$(id),d=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;c.width=w*d;c.height=h*d;let x=c.getContext(&#x27;2d&#x27;);x.scale(d,d);return[x,w,h]}
+function bars(id,items){let[x,w,h]=setup(id),max=Math.max(...items.map(a=&gt;a.v||0),1),left=95;items.forEach((a,i)=&gt;{let y=22+i*(h-35)/items.length,bh=Math.max(15,(h-55)/items.length-10),bw=(w-left-75)*(a.v||0)/max;x.fillStyle=i%2?&#x27;#8fc3ee&#x27;:&#x27;#2e86de&#x27;;x.fillRect(left,y,bw,bh);x.fillStyle=&#x27;#26384d&#x27;;x.font=&#x27;11px Segoe UI&#x27;;x.fillText(a.n,5,y+bh*.7);x.fillText(fmt(a.v),left+bw+7,y+bh*.7)})}
+function line(id,series){let[x,w,h]=setup(id),p={l:48,r:15,t:18,b:38},vals=series.flatMap(s=&gt;s.v).filter(v=&gt;v!=null),mn=Math.min(0,...vals),mx=Math.max(...vals,1)*1.1,X=i=&gt;p.l+(w-p.l-p.r)*(DATA.length===1?.5:i/(DATA.length-1)),Y=v=&gt;p.t+(mx-v)/(mx-mn)*(h-p.t-p.b);x.font=&#x27;10px Segoe UI&#x27;;x.strokeStyle=&#x27;#dfe7ef&#x27;;for(let j=0;j&lt;5;j++){let y=p.t+j*(h-p.t-p.b)/4;x.beginPath();x.moveTo(p.l,y);x.lineTo(w-p.r,y);x.stroke()}series.forEach((s,k)=&gt;{x.strokeStyle=k===0?&#x27;#075da8&#x27;:k===1?&#x27;#18845d&#x27;:&#x27;#c17a00&#x27;;x.lineWidth=2.5;x.beginPath();s.v.forEach((v,i)=&gt;{if(v==null)return;i?x.lineTo(X(i),Y(v)):x.moveTo(X(i),Y(v))});x.stroke()});DATA.forEach((d,i)=&gt;{x.fillStyle=&#x27;#687386&#x27;;x.fillText(d.sheet,X(i)-15,h-12)})}
+function fill(){$(&#x27;day&#x27;).innerHTML=DATA.map((d,i)=&gt;`&lt;option value=&quot;${i}&quot;&gt;${d.date}&lt;/option&gt;`).join(&#x27;&#x27;); if(DATA.length)$(&#x27;day&#x27;).value=String(DATA.length-1)}
+function render(){let sel=$(&#x27;day&#x27;).value,idx=Math.max(0,Math.min(DATA.length-1,Number(sel)||0)),rows=DATA.length?[DATA[idx]]:[],last=rows[0]||{remarks:[]},sum=k=&gt;rows.reduce((s,d)=&gt;s+(d[k]||0),0),avg=k=&gt;{let a=rows.map(d=&gt;d[k]).filter(v=&gt;v!=null);return a.length?a.reduce((s,v)=&gt;s+v,0)/a.length:null};
+let cards=[[&#x27;CPO Feed&#x27;,sum(&#x27;cpo&#x27;),&#x27;MT&#x27;],[&#x27;RBDPO&#x27;,sum(&#x27;rbdpo&#x27;),&#x27;MT&#x27;],[&#x27;PFAD&#x27;,sum(&#x27;pfad&#x27;),&#x27;MT&#x27;],[&#x27;Yield RBDPO&#x27;,avg(&#x27;yield_rbdpo&#x27;),&#x27;pct&#x27;],[&#x27;Running Time&#x27;,avg(&#x27;run&#x27;),&#x27;Hours&#x27;],[&#x27;Downtime&#x27;,avg(&#x27;down&#x27;),&#x27;Hours&#x27;]];
+$(&#x27;kpis&#x27;).innerHTML=cards.map(c=&gt;`&lt;div class=&quot;card kpi&quot;&gt;&lt;div class=&quot;t&quot;&gt;${c[0]}&lt;/div&gt;&lt;div class=&quot;v&quot;&gt;${c[2]===&#x27;pct&#x27;?pct(c[1]):fmt(c[1])}&lt;/div&gt;&lt;div class=&quot;s&quot;&gt;${c[2]===&#x27;pct&#x27;?&#x27;Average&#x27;:&#x27; &#x27;+c[2]}&lt;/div&gt;&lt;/div&gt;`).join(&#x27;&#x27;);
+line(&#x27;prod&#x27;,[{v:DATA.map(d=&gt;d.cpo)},{v:DATA.map(d=&gt;d.rbdpo)},{v:DATA.map(d=&gt;d.pfad)}]);
+let yr=avg(&#x27;yield_rbdpo&#x27;),tr=avg(&#x27;target_rbdpo&#x27;),yp=avg(&#x27;yield_pfad&#x27;),tp=avg(&#x27;target_pfad&#x27;);bars(&#x27;yield&#x27;,[{n:&#x27;RBDPO Actual %&#x27;,v:(yr||0)*100},{n:&#x27;RBDPO Target %&#x27;,v:(tr||0)*100},{n:&#x27;PFAD Actual %&#x27;,v:(yp||0)*100},{n:&#x27;PFAD Target %&#x27;,v:(tp||0)*100}]);
+let cons={};rows.forEach(d=&gt;Object.entries(d.cons||{}).forEach(([k,v])=&gt;cons[k]=(cons[k]||0)+v));bars(&#x27;cons&#x27;,Object.entries(cons).map(([n,v])=&gt;({n,v})).slice(0,7));
+bars(&#x27;runtime&#x27;,[{n:&#x27;Running Time&#x27;,v:avg(&#x27;run&#x27;)},{n:&#x27;Downtime&#x27;,v:avg(&#x27;down&#x27;)}]);
+$(&#x27;tbody&#x27;).innerHTML=rows.map(d=&gt;`&lt;tr&gt;&lt;td&gt;${d.date}&lt;/td&gt;&lt;td&gt;${fmt(d.cpo)}&lt;/td&gt;&lt;td&gt;${fmt(d.rbdpo)}&lt;/td&gt;&lt;td&gt;${fmt(d.pfad)}&lt;/td&gt;&lt;td&gt;${pct(d.yield_rbdpo)}&lt;/td&gt;&lt;td&gt;${pct(d.yield_pfad)}&lt;/td&gt;&lt;td&gt;${fmt(d.run)}&lt;/td&gt;&lt;td&gt;${fmt(d.down)}&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;);
+$(&#x27;remarks&#x27;).innerHTML=(last.remarks||[]).length?&#x27;&lt;b&gt;&#x27;+last.date+&#x27;&lt;/b&gt;&lt;br&gt;&#x27;+last.remarks.map(x=&gt;&#x27;• &#x27;+x).join(&#x27;&lt;br&gt;&#x27;):&#x27;Tidak ada remarks.&#x27;;
+}
+&lt;/script&gt;
+
+&lt;script&gt;
+const SOURCE=&#x27;refinery&#x27;, CACHE_KEY=&#x27;wps_live_&#x27;+SOURCE;
+function applyPayload(res,fromCache){
+  if(!res||!res.data)return;
+  DATA=res.data;
+  if(SOURCE===&#x27;utility&#x27;){
+    if(DATA.dates&amp;&amp;DATA.dates.length){
+      const latest=DATA.dates[DATA.dates.length-1];
+      const a=document.getElementById(&#x27;start&#x27;),b=document.getElementById(&#x27;end&#x27;);
+      if(a)a.value=latest;if(b)b.value=latest;
+    }
+    if(typeof fillMetrics===&#x27;function&#x27;)fillMetrics();
+    if(typeof render===&#x27;function&#x27;)render();
+  }else{
+    if(typeof fill===&#x27;function&#x27;)fill();
+    const day=document.getElementById(&#x27;day&#x27;);
+    if(day&amp;&amp;DATA.length)day.value=String(DATA.length-1);
+    if(typeof render===&#x27;function&#x27;)render();
+  }
+  if(!fromCache)try{localStorage.setItem(CACHE_KEY,JSON.stringify(res))}catch(e){}
+}
+try{const c=JSON.parse(localStorage.getItem(CACHE_KEY)||&#x27;null&#x27;);if(c&amp;&amp;c.data)applyPayload(c,true)}catch(e){}
+window.addEventListener(&#x27;message&#x27;,function(e){
+  const m=e.data;
+  if(!m||m.type!==&#x27;wps-data&#x27;||m.source!==SOURCE)return;
+  try{applyPayload(m.payload,false);parent.postMessage({type:&#x27;wps-rendered&#x27;,source:SOURCE,ok:true,time:Date.now()},&#x27;*&#x27;)}
+  catch(err){parent.postMessage({type:&#x27;wps-rendered&#x27;,source:SOURCE,ok:false,error:err.message,time:Date.now()},&#x27;*&#x27;)}
+});
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe></section>
+<section id="biodiesel" class="framebox"><iframe srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;id&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;&lt;title&gt;Biodiesel Dashboard&lt;/title&gt;
+&lt;style&gt;
+:root{--b:#075da8;--g:#16835d;--r:#c43d3d;--bg:#f4f7fb;--ink:#14213d;--m:#6b7280;--line:#dfe7f1}*{box-sizing:border-box}body{margin:0;font-family:Segoe UI,Arial;background:var(--bg);color:var(--ink)}header{background:linear-gradient(110deg,#073b70,#075da8,#2f80ed);color:#fff;padding:24px 30px}h1{margin:0;font-size:26px}header p{margin:6px 0 0;opacity:.9}.wrap{max-width:1480px;margin:auto;padding:20px}.card,.toolbar{background:white;border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 18px #173c5c0d}.toolbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap;padding:14px;margin-bottom:15px}label{font-size:11px;font-weight:700;color:var(--m);display:block;margin-bottom:5px}select,button{padding:10px 12px;border-radius:8px;border:1px solid #ccd8e6;background:white}button{border:0;background:var(--b);color:#fff;font-weight:700;cursor:pointer}.green{background:var(--g)}.gray{background:#64748b}.status{margin-left:auto;font-size:12px;font-weight:700;color:var(--g)}.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:15px}.kpi{padding:15px}.t{font-size:11px;color:var(--m);font-weight:700}.v{font-size:24px;font-weight:800;margin:7px 0 3px}.s{font-size:11px;color:var(--m)}.grid{display:grid;grid-template-columns:1.45fr 1fr;gap:15px;margin-bottom:15px}.card{padding:16px}h3{font-size:15px;margin:0 0 12px}canvas{width:100%;height:285px;display:block}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:9px;border-bottom:1px solid #e8edf4;text-align:right}th{background:#eef5fb}th:first-child,td:first-child{text-align:left}.remarks{font-size:12px;line-height:1.6;color:#445066}.note{font-size:11px;color:var(--m)}@media(max-width:1050px){.kpis{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr}}@media(max-width:600px){.kpis{grid-template-columns:repeat(2,1fr)}}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;header&gt;&lt;h1&gt;Dashboard Performance Biodiesel&lt;/h1&gt;&lt;p&gt;PT. Wahana Prima Sejati • Biodiesel Daily Production&lt;/p&gt;&lt;/header&gt;&lt;div class=&quot;wrap&quot;&gt;
+&lt;div class=&quot;toolbar&quot;&gt;&lt;div&gt;&lt;label&gt;Pilih Tanggal&lt;/label&gt;&lt;select id=&quot;day&quot;&gt;&lt;/select&gt;&lt;/div&gt;&lt;button onclick=&quot;render()&quot;&gt;Tampilkan&lt;/button&gt;&lt;span id=&quot;apiBadge&quot; style=&quot;font-size:11px;font-weight:800;color:#c17a00&quot;&gt;● Connecting&lt;/span&gt;&lt;div id=&quot;status&quot; class=&quot;status&quot;&gt;Data awal workbook&lt;/div&gt;&lt;/div&gt;
+&lt;div id=&quot;kpis&quot; class=&quot;kpis&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;grid&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Trend Produksi Harian&lt;/h3&gt;&lt;canvas id=&quot;trend&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Yield Actual vs Target&lt;/h3&gt;&lt;canvas id=&quot;yield&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;grid&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Consumable Chemical &amp; Utility (incl. Methanol &amp; Power)&lt;/h3&gt;&lt;canvas id=&quot;cons&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Utility Usage&lt;/h3&gt;&lt;canvas id=&quot;util&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;grid&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Daily Production Detail&lt;/h3&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Product&lt;/th&gt;&lt;th&gt;Production (MT)&lt;/th&gt;&lt;th&gt;Yield&lt;/th&gt;&lt;th&gt;Target&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody id=&quot;tbody&quot;&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Operational Remarks&lt;/h3&gt;&lt;div id=&quot;remarks&quot; class=&quot;remarks&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+let DATA=[],ORIGINAL=JSON.parse(JSON.stringify(DATA));const $=x=&gt;document.getElementById(x),fmt=(v,d=2)=&gt;v==null?&#x27;-&#x27;:Number(v).toLocaleString(&#x27;id-ID&#x27;,{maximumFractionDigits:d}),pct=v=&gt;v==null?&#x27;-&#x27;:(v*100).toFixed(2)+&#x27;%&#x27;;
+function setup(id){let c=$(id),d=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;c.width=w*d;c.height=h*d;let x=c.getContext(&#x27;2d&#x27;);x.scale(d,d);return[x,w,h]}
+function bars(id,a){let[x,w,h]=setup(id),mx=Math.max(...a.map(z=&gt;z.v||0),1),L=125;a.forEach((z,i)=&gt;{let y=18+i*(h-35)/a.length,bh=Math.max(13,(h-50)/a.length-7),bw=(w-L-80)*(z.v||0)/mx;x.fillStyle=i%2?&#x27;#8fc3ee&#x27;:&#x27;#2f80ed&#x27;;x.fillRect(L,y,bw,bh);x.fillStyle=&#x27;#26384d&#x27;;x.font=&#x27;11px Segoe UI&#x27;;x.fillText(z.n.slice(0,20),5,y+bh*.72);x.fillText(fmt(z.v),L+bw+7,y+bh*.72)})}
+function line(){let[x,w,h]=setup(&#x27;trend&#x27;),P={l:48,r:15,t:18,b:38},S=[[&#x27;RPO&#x27;,DATA.map(d=&gt;d.prod[&#x27;RPO/RPS/RPOL&#x27;]?.total)],[&#x27;FAME&#x27;,DATA.map(d=&gt;d.prod[&#x27;FAME&#x27;]?.total)],[&#x27;CG&#x27;,DATA.map(d=&gt;d.prod[&#x27;Crude Glycerine&#x27;]?.total)]],vals=S.flatMap(s=&gt;s[1]).filter(v=&gt;v!=null),mx=Math.max(...vals,1)*1.1,X=i=&gt;P.l+(w-P.l-P.r)*(DATA.length===1?.5:i/(DATA.length-1)),Y=v=&gt;P.t+(mx-v)/mx*(h-P.t-P.b);x.strokeStyle=&#x27;#dfe7f1&#x27;;for(let j=0;j&lt;5;j++){let y=P.t+j*(h-P.t-P.b)/4;x.beginPath();x.moveTo(P.l,y);x.lineTo(w-P.r,y);x.stroke()}S.forEach((s,k)=&gt;{x.strokeStyle=[&#x27;#075da8&#x27;,&#x27;#16835d&#x27;,&#x27;#c17a00&#x27;][k];x.lineWidth=2.5;x.beginPath();s[1].forEach((v,i)=&gt;{if(v==null)return;i?x.lineTo(X(i),Y(v)):x.moveTo(X(i),Y(v))});x.stroke()});x.font=&#x27;10px Segoe UI&#x27;;DATA.forEach((d,i)=&gt;x.fillText(d.sheet,X(i)-5,h-12))}
+function fill(){$(&#x27;day&#x27;).innerHTML=DATA.map((d,i)=&gt;`&lt;option value=&quot;${i}&quot;&gt;${d.date}&lt;/option&gt;`).join(&#x27;&#x27;);if(DATA.length)$(&#x27;day&#x27;).value=DATA.length-1}
+function render(){let d=DATA[+$(&#x27;day&#x27;).value]||DATA[0];if(!d)return;let fame=d.prod[&#x27;FAME&#x27;]||{},cg=d.prod[&#x27;Crude Glycerine&#x27;]||{},fm=d.prod[&#x27;Fatty Matter&#x27;]||{},rpo=d.prod[&#x27;RPO/RPS/RPOL&#x27;]||{},run=(d.run||0)+(d.run_min||0)/60,down=(d.down||0)+(d.down_min||0)/60;
+let cards=[[&#x27;RPO Feed&#x27;,rpo.total,&#x27;MT&#x27;],[&#x27;FAME&#x27;,fame.total,&#x27;MT&#x27;],[&#x27;Yield FAME&#x27;,fame.yield,&#x27;pct&#x27;],[&#x27;Crude Glycerine&#x27;,cg.total,&#x27;MT&#x27;],[&#x27;Fatty Matter&#x27;,fm.total,&#x27;MT&#x27;],[&#x27;Running Time&#x27;,run,&#x27;Hours&#x27;]];$(&#x27;kpis&#x27;).innerHTML=cards.map(c=&gt;`&lt;div class=&quot;card kpi&quot;&gt;&lt;div class=&quot;t&quot;&gt;${c[0]}&lt;/div&gt;&lt;div class=&quot;v&quot;&gt;${c[2]==&#x27;pct&#x27;?pct(c[1]):fmt(c[1])}&lt;/div&gt;&lt;div class=&quot;s&quot;&gt;${c[2]==&#x27;pct&#x27;?&#x27;Target &#x27;+pct(fame.target):c[2]}&lt;/div&gt;&lt;/div&gt;`).join(&#x27;&#x27;);
+line();bars(&#x27;yield&#x27;,[{n:&#x27;FAME Actual %&#x27;,v:(fame.yield||0)*100},{n:&#x27;FAME Target %&#x27;,v:(fame.target||0)*100},{n:&#x27;CG Actual %&#x27;,v:(cg.yield||0)*100},{n:&#x27;CG Target %&#x27;,v:(cg.target||0)*100},{n:&#x27;FM Actual %&#x27;,v:(fm.yield||0)*100},{n:&#x27;FM Target %&#x27;,v:(fm.target||0)*100}]);
+let consChart=Object.entries(d.cons).map(([n,z])=&gt;({n,v:z.ratio})).filter(z=&gt;z.v!=null);
+const priority=[&#x27;Methanol&#x27;,&#x27;Mathanol&#x27;,&#x27;Power&#x27;];
+priority.slice().reverse().forEach(key=&gt;{
+  const i=consChart.findIndex(z=&gt;z.n.toLowerCase()===key.toLowerCase());
+  if(i&gt;0){const item=consChart.splice(i,1)[0];consChart.unshift(item)}
+});
+bars(&#x27;cons&#x27;,consChart.slice(0,12));
+bars(&#x27;util&#x27;,Object.entries(d.util).map(([n,z])=&gt;({n,v:z.ratio})).filter(z=&gt;z.v!=null));
+$(&#x27;tbody&#x27;).innerHTML=Object.entries(d.prod).filter(([n,z])=&gt;z.total!=null).map(([n,z])=&gt;`&lt;tr&gt;&lt;td&gt;${n}&lt;/td&gt;&lt;td&gt;${fmt(z.total)}&lt;/td&gt;&lt;td&gt;${pct(z.yield)}&lt;/td&gt;&lt;td&gt;${pct(z.target)}&lt;/td&gt;&lt;td&gt;${z.target==null?&#x27;-&#x27;:z.yield&gt;=z.target?&#x27;OK&#x27;:&#x27;Out of Target&#x27;}&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;);
+$(&#x27;remarks&#x27;).innerHTML=`&lt;b&gt;${d.date}&lt;/b&gt;&lt;br&gt;Running: ${fmt(run)} jam • Downtime: ${fmt(down)} jam&lt;br&gt;&lt;br&gt;${d.remarks.length?d.remarks.map(x=&gt;&#x27;• &#x27;+x).join(&#x27;&lt;br&gt;&#x27;):&#x27;Tidak ada remarks.&#x27;}`}
+&lt;/script&gt;
+
+&lt;script&gt;
+const SOURCE=&#x27;biodiesel&#x27;, CACHE_KEY=&#x27;wps_live_&#x27;+SOURCE;
+function applyPayload(res,fromCache){
+  if(!res||!res.data)return;
+  DATA=res.data;
+  if(SOURCE===&#x27;utility&#x27;){
+    if(DATA.dates&amp;&amp;DATA.dates.length){
+      const latest=DATA.dates[DATA.dates.length-1];
+      const a=document.getElementById(&#x27;start&#x27;),b=document.getElementById(&#x27;end&#x27;);
+      if(a)a.value=latest;if(b)b.value=latest;
+    }
+    if(typeof fillMetrics===&#x27;function&#x27;)fillMetrics();
+    if(typeof render===&#x27;function&#x27;)render();
+  }else{
+    if(typeof fill===&#x27;function&#x27;)fill();
+    const day=document.getElementById(&#x27;day&#x27;);
+    if(day&amp;&amp;DATA.length)day.value=String(DATA.length-1);
+    if(typeof render===&#x27;function&#x27;)render();
+  }
+  if(!fromCache)try{localStorage.setItem(CACHE_KEY,JSON.stringify(res))}catch(e){}
+}
+try{const c=JSON.parse(localStorage.getItem(CACHE_KEY)||&#x27;null&#x27;);if(c&amp;&amp;c.data)applyPayload(c,true)}catch(e){}
+window.addEventListener(&#x27;message&#x27;,function(e){
+  const m=e.data;
+  if(!m||m.type!==&#x27;wps-data&#x27;||m.source!==SOURCE)return;
+  try{applyPayload(m.payload,false);parent.postMessage({type:&#x27;wps-rendered&#x27;,source:SOURCE,ok:true,time:Date.now()},&#x27;*&#x27;)}
+  catch(err){parent.postMessage({type:&#x27;wps-rendered&#x27;,source:SOURCE,ok:false,error:err.message,time:Date.now()},&#x27;*&#x27;)}
+});
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe></section>
+<section id="fractionation" class="framebox"><iframe srcdoc="&lt;!doctype html&gt;&lt;html lang=&quot;id&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;&lt;title&gt;Fractionation Dashboard&lt;/title&gt;
+&lt;style&gt;
+:root{--b:#075da8;--g:#16835d;--bg:#f4f7fb;--ink:#14213d;--m:#6b7280;--line:#dfe7f1}*{box-sizing:border-box}body{margin:0;font-family:Segoe UI,Arial;background:var(--bg);color:var(--ink)}header{background:linear-gradient(110deg,#073b70,#075da8,#2f80ed);color:white;padding:24px 30px}h1{margin:0;font-size:26px}header p{margin:6px 0 0;opacity:.9}.wrap{max-width:1450px;margin:auto;padding:20px}.card,.toolbar{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 18px #173c5c0d}.toolbar{padding:14px;display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:15px}label{display:block;font-size:11px;font-weight:700;color:var(--m);margin-bottom:5px}select,button{padding:10px 12px;border-radius:8px;border:1px solid #ccd8e6;background:white}button{border:0;background:var(--b);color:white;font-weight:700;cursor:pointer}.green{background:var(--g)}.gray{background:#64748b}.status{margin-left:auto;font-size:12px;font-weight:700;color:var(--g)}.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:15px}.kpi{padding:15px}.t{font-size:11px;color:var(--m);font-weight:700}.v{font-size:24px;font-weight:800;margin:7px 0 3px}.s{font-size:11px;color:var(--m)}.grid{display:grid;grid-template-columns:1.45fr 1fr;gap:15px;margin-bottom:15px}.card{padding:16px}h3{font-size:15px;margin:0 0 12px}canvas{width:100%;height:285px;display:block}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:9px;border-bottom:1px solid #e8edf4;text-align:right}th{background:#eef5fb}th:first-child,td:first-child{text-align:left}.remarks{font-size:12px;line-height:1.65;color:#445066}.note{font-size:11px;color:var(--m)}@media(max-width:1050px){.kpis{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr}}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;header&gt;&lt;h1&gt;Dashboard Performance Fractionation&lt;/h1&gt;&lt;p&gt;PT. Wahana Prima Sejati • Fractionation Daily Production&lt;/p&gt;&lt;/header&gt;&lt;div class=&quot;wrap&quot;&gt;
+&lt;div class=&quot;toolbar&quot;&gt;&lt;div&gt;&lt;label&gt;Pilih Tanggal&lt;/label&gt;&lt;select id=&quot;day&quot;&gt;&lt;/select&gt;&lt;/div&gt;&lt;button onclick=&quot;render()&quot;&gt;Tampilkan&lt;/button&gt;&lt;span id=&quot;apiBadge&quot; style=&quot;font-size:11px;font-weight:800;color:#c17a00&quot;&gt;● Connecting&lt;/span&gt;&lt;div class=&quot;status&quot; id=&quot;status&quot;&gt;Data awal workbook&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;kpis&quot; id=&quot;kpis&quot;&gt;&lt;/div&gt;&lt;div class=&quot;grid&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Trend Produksi Harian&lt;/h3&gt;&lt;canvas id=&quot;trend&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Yield Olein &amp; Stearin&lt;/h3&gt;&lt;canvas id=&quot;yield&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;grid&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Utility Usage&lt;/h3&gt;&lt;canvas id=&quot;util&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Quality Production&lt;/h3&gt;&lt;div style=&quot;overflow:auto&quot;&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Parameter&lt;/th&gt;&lt;th&gt;Sub Parameter&lt;/th&gt;&lt;th&gt;Value&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody id=&quot;quality&quot;&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;grid&quot;&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Daily Production Detail&lt;/h3&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Product&lt;/th&gt;&lt;th&gt;Production (MT)&lt;/th&gt;&lt;th&gt;Yield&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody id=&quot;tbody&quot;&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;&lt;div class=&quot;card&quot;&gt;&lt;h3&gt;Operational Remarks&lt;/h3&gt;&lt;div id=&quot;remarks&quot; class=&quot;remarks&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+let DATA=[],ORIGINAL=JSON.parse(JSON.stringify(DATA));const $=x=&gt;document.getElementById(x),fmt=(v,d=2)=&gt;v==null?&#x27;-&#x27;:Number(v).toLocaleString(&#x27;id-ID&#x27;,{maximumFractionDigits:d}),pct=v=&gt;v==null?&#x27;-&#x27;:(v*100).toFixed(2)+&#x27;%&#x27;;
+function setup(id){let c=$(id),d=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;c.width=w*d;c.height=h*d;let x=c.getContext(&#x27;2d&#x27;);x.scale(d,d);return[x,w,h]}
+function bars(id,a){let[x,w,h]=setup(id),mx=Math.max(...a.map(z=&gt;z.v||0),1),L=135;a.forEach((z,i)=&gt;{let y=18+i*(h-35)/Math.max(a.length,1),bh=Math.max(13,(h-50)/Math.max(a.length,1)-7),bw=(w-L-80)*(z.v||0)/mx;x.fillStyle=i%2?&#x27;#8fc3ee&#x27;:&#x27;#2f80ed&#x27;;x.fillRect(L,y,bw,bh);x.fillStyle=&#x27;#26384d&#x27;;x.font=&#x27;11px Segoe UI&#x27;;x.fillText(z.n.slice(0,21),5,y+bh*.72);x.fillText(fmt(z.v),L+bw+7,y+bh*.72)})}
+function line(){let[x,w,h]=setup(&#x27;trend&#x27;),P={l:48,r:15,t:18,b:38},S=[DATA.map(d=&gt;d.prod.RBDPO?.qty),DATA.map(d=&gt;d.prod.OLEIN?.qty),DATA.map(d=&gt;d.prod.STEARIN?.qty)],vals=S.flat().filter(v=&gt;v!=null),mx=Math.max(...vals,1)*1.1,X=i=&gt;P.l+(w-P.l-P.r)*(DATA.length===1?.5:i/(DATA.length-1)),Y=v=&gt;P.t+(mx-v)/mx*(h-P.t-P.b);x.strokeStyle=&#x27;#dfe7f1&#x27;;for(let j=0;j&lt;5;j++){let y=P.t+j*(h-P.t-P.b)/4;x.beginPath();x.moveTo(P.l,y);x.lineTo(w-P.r,y);x.stroke()}S.forEach((s,k)=&gt;{x.strokeStyle=[&#x27;#075da8&#x27;,&#x27;#16835d&#x27;,&#x27;#c17a00&#x27;][k];x.lineWidth=2.5;x.beginPath();s.forEach((v,i)=&gt;{if(v==null)return;i?x.lineTo(X(i),Y(v)):x.moveTo(X(i),Y(v))});x.stroke()});x.font=&#x27;10px Segoe UI&#x27;;DATA.forEach((d,i)=&gt;x.fillText(d.sheet.slice(0,2),X(i)-5,h-12))}
+function fill(){$(&#x27;day&#x27;).innerHTML=DATA.map((d,i)=&gt;`&lt;option value=&quot;${i}&quot;&gt;${d.date}&lt;/option&gt;`).join(&#x27;&#x27;);if(DATA.length)$(&#x27;day&#x27;).value=DATA.length-1}
+function render(){let d=DATA[+$(&#x27;day&#x27;).value]||DATA[0];if(!d)return;let r=d.prod.RBDPO||{},o=d.prod.OLEIN||{},s=d.prod.STEARIN||{},run=(d.run||0)+(d.runmin||0)/60,down=(d.down||0)+(d.downmin||0)/60,cards=[[&#x27;RBDPO Feed&#x27;,r.qty,&#x27;MT&#x27;],[&#x27;Olein&#x27;,o.qty,&#x27;MT&#x27;],[&#x27;Stearin&#x27;,s.qty,&#x27;MT&#x27;],[&#x27;Yield Olein&#x27;,o.yield,&#x27;pct&#x27;],[&#x27;Yield Stearin&#x27;,s.yield,&#x27;pct&#x27;],[&#x27;Running Time&#x27;,run,&#x27;Hours&#x27;]];$(&#x27;kpis&#x27;).innerHTML=cards.map(c=&gt;`&lt;div class=&quot;card kpi&quot;&gt;&lt;div class=&quot;t&quot;&gt;${c[0]}&lt;/div&gt;&lt;div class=&quot;v&quot;&gt;${c[2]==&#x27;pct&#x27;?pct(c[1]):fmt(c[1])}&lt;/div&gt;&lt;div class=&quot;s&quot;&gt;${c[2]==&#x27;pct&#x27;?&#x27;Daily Yield&#x27;:c[2]}&lt;/div&gt;&lt;/div&gt;`).join(&#x27;&#x27;);line();bars(&#x27;yield&#x27;,[{n:&#x27;Olein %&#x27;,v:(o.yield||0)*100},{n:&#x27;Stearin %&#x27;,v:(s.yield||0)*100}]);bars(&#x27;util&#x27;,Object.entries(d.util).map(([n,z])=&gt;({n,v:z.ratio})).filter(z=&gt;z.v!=null));$(&#x27;tbody&#x27;).innerHTML=Object.entries(d.prod).map(([n,z])=&gt;`&lt;tr&gt;&lt;td&gt;${n}&lt;/td&gt;&lt;td&gt;${fmt(z.qty)}&lt;/td&gt;&lt;td&gt;${pct(z.yield)}&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;);$(&#x27;quality&#x27;).innerHTML=Object.entries(d.quality).map(([n,z])=&gt;`&lt;tr&gt;&lt;td&gt;${n}&lt;/td&gt;&lt;td&gt;${z.param}&lt;/td&gt;&lt;td&gt;${fmt(z.value,3)}&lt;/td&gt;&lt;/tr&gt;`).join(&#x27;&#x27;);$(&#x27;remarks&#x27;).innerHTML=`&lt;b&gt;${d.date}&lt;/b&gt;&lt;br&gt;Running: ${fmt(run)} jam • Downtime: ${fmt(down)} jam&lt;br&gt;&lt;br&gt;${d.remarks.length?d.remarks.map(x=&gt;&#x27;• &#x27;+x).join(&#x27;&lt;br&gt;&#x27;):&#x27;Tidak ada remarks.&#x27;}`}
+&lt;/script&gt;
+
+&lt;script&gt;
+const SOURCE=&#x27;fractionation&#x27;, CACHE_KEY=&#x27;wps_live_&#x27;+SOURCE;
+function applyPayload(res,fromCache){
+  if(!res||!res.data)return;
+  DATA=res.data;
+  if(SOURCE===&#x27;utility&#x27;){
+    if(DATA.dates&amp;&amp;DATA.dates.length){
+      const latest=DATA.dates[DATA.dates.length-1];
+      const a=document.getElementById(&#x27;start&#x27;),b=document.getElementById(&#x27;end&#x27;);
+      if(a)a.value=latest;if(b)b.value=latest;
+    }
+    if(typeof fillMetrics===&#x27;function&#x27;)fillMetrics();
+    if(typeof render===&#x27;function&#x27;)render();
+  }else{
+    if(typeof fill===&#x27;function&#x27;)fill();
+    const day=document.getElementById(&#x27;day&#x27;);
+    if(day&amp;&amp;DATA.length)day.value=String(DATA.length-1);
+    if(typeof render===&#x27;function&#x27;)render();
+  }
+  if(!fromCache)try{localStorage.setItem(CACHE_KEY,JSON.stringify(res))}catch(e){}
+}
+try{const c=JSON.parse(localStorage.getItem(CACHE_KEY)||&#x27;null&#x27;);if(c&amp;&amp;c.data)applyPayload(c,true)}catch(e){}
+window.addEventListener(&#x27;message&#x27;,function(e){
+  const m=e.data;
+  if(!m||m.type!==&#x27;wps-data&#x27;||m.source!==SOURCE)return;
+  try{applyPayload(m.payload,false);parent.postMessage({type:&#x27;wps-rendered&#x27;,source:SOURCE,ok:true,time:Date.now()},&#x27;*&#x27;)}
+  catch(err){parent.postMessage({type:&#x27;wps-rendered&#x27;,source:SOURCE,ok:false,error:err.message,time:Date.now()},&#x27;*&#x27;)}
+});
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe></section>
+<section id="utility" class="framebox"><iframe srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;id&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;
+&lt;title&gt;Interactive Utility Dashboard - PT Wahana Prima Sejati&lt;/title&gt;
+&lt;style&gt;
+:root{--bg:#f4f7fb;--card:#fff;--ink:#14213d;--muted:#6b7280;--blue:#0b5cab;--blue2:#2f80ed;--green:#16835d;--red:#c53b3b;--amber:#c27b00;--line:#dfe7f1}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(110deg,#073b70,#0b5cab 55%,#2f80ed);color:white;padding:24px 28px}
+header h1{margin:0;font-size:25px} header p{margin:6px 0 0;opacity:.85}
+.wrap{max-width:1500px;margin:auto;padding:20px}
+.toolbar,.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 18px rgba(15,45,75,.06)}
+.toolbar{padding:14px;display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px}
+label{font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:5px} select,input{border:1px solid #ccd8e6;border-radius:8px;padding:9px 10px;background:white;color:var(--ink)}
+button{border:0;border-radius:8px;padding:10px 14px;background:var(--blue);color:white;font-weight:700;cursor:pointer}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:16px}
+.kpi{padding:15px} .kpi .t{font-size:12px;color:var(--muted);font-weight:700} .kpi .v{font-size:24px;font-weight:800;margin-top:7px} .kpi .s{font-size:11px;color:var(--muted);margin-top:4px}
+.grid{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:16px} .card{padding:16px}
+.card h3{margin:0 0 12px;font-size:15px} canvas{width:100%;height:300px;display:block}
+.table-wrap{overflow:auto;max-height:520px} table{width:100%;border-collapse:collapse;font-size:12px} th{position:sticky;top:0;background:#edf4fb;z-index:1} th,td{padding:9px 10px;border-bottom:1px solid #e7edf5;text-align:right;white-space:nowrap} th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+.badge{padding:4px 8px;border-radius:999px;font-weight:700;font-size:11px} .ok{background:#e7f7f0;color:#08734f} .bad{background:#fdecec;color:#a72e2e} .neutral{background:#eef2f7;color:#596579}
+.note{font-size:11px;color:var(--muted);margin-top:10px} footer{padding:12px 0 25px;color:var(--muted);font-size:11px}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr}} @media(max-width:650px){.kpis{grid-template-columns:repeat(2,1fr)}}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;
+&lt;header&gt;&lt;h1&gt;Dashboard Performance Utility Operational&lt;/h1&gt;&lt;p&gt;PT. Wahana Prima Sejati&lt;/p&gt;&lt;/header&gt;
+&lt;div class=&quot;wrap&quot;&gt;
+&lt;div class=&quot;toolbar&quot;&gt;
+&lt;div&gt;&lt;label&gt;Section&lt;/label&gt;&lt;select id=&quot;section&quot;&gt;&lt;option&gt;Semua Section&lt;/option&gt;&lt;option&gt;Boiler 35 TPH&lt;/option&gt;&lt;option&gt;Summary Boiler&lt;/option&gt;&lt;option&gt;WTP / Clean Water&lt;/option&gt;&lt;option&gt;RO Water&lt;/option&gt;&lt;option&gt;ETP-1 Aerobic&lt;/option&gt;&lt;option&gt;ETP-2 Anaerobic&lt;/option&gt;&lt;/select&gt;&lt;/div&gt;
+&lt;div&gt;&lt;label&gt;Mulai&lt;/label&gt;&lt;input type=&quot;date&quot; id=&quot;start&quot; value=&quot;2026-08-01&quot;&gt;&lt;/div&gt;
+&lt;div&gt;&lt;label&gt;Sampai&lt;/label&gt;&lt;input type=&quot;date&quot; id=&quot;end&quot; value=&quot;2026-08-05&quot;&gt;&lt;/div&gt;
+&lt;div&gt;&lt;label&gt;KPI untuk Trend&lt;/label&gt;&lt;select id=&quot;metric&quot;&gt;&lt;/select&gt;&lt;/div&gt;
+&lt;button onclick=&quot;render()&quot;&gt;Terapkan Filter&lt;/button&gt;
+&lt;button onclick=&quot;document.getElementById(&#x27;xlsxFile&#x27;).click()&quot; style=&quot;background:#16835d&quot;&gt;📂 Update Data Excel&lt;/button&gt;
+&lt;input id=&quot;xlsxFile&quot; type=&quot;file&quot; accept=&quot;.xlsx,.xls&quot; style=&quot;display:none&quot; onchange=&quot;updateFromExcel(event)&quot;&gt;
+&lt;button onclick=&quot;resetOriginal()&quot; style=&quot;background:#64748b&quot;&gt;Reset Data&lt;/button&gt;
+&lt;div style=&quot;margin-left:auto;min-width:190px&quot;&gt;&lt;label&gt;Status Data&lt;/label&gt;&lt;div id=&quot;updateStatus&quot; style=&quot;font-size:12px;font-weight:700;color:#16835d&quot;&gt;Data awal workbook&lt;/div&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;kpis&quot; id=&quot;kpis&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;grid&quot;&gt;
+&lt;div class=&quot;card&quot;&gt;&lt;h3 id=&quot;trendTitle&quot;&gt;Trend KPI Harian&lt;/h3&gt;&lt;canvas id=&quot;trend&quot;&gt;&lt;/canvas&gt;
+&lt;script&gt;
+let DATA={dates:[],records:[],power:[]};
+const ORIGINAL_DATA=JSON.parse(JSON.stringify(DATA));
+const $=id=&gt;document.getElementById(id);
+function cleanValue(rec,v){
+ if(typeof v!==&#x27;number&#x27;||!isFinite(v)) return null;
+ const n=(rec&amp;&amp;rec.item?rec.item:&#x27;&#x27;).toLowerCase();
+ // Negative values are invalid for physical utility quantities/ratios generated from totalizers.
+ const nonNegative=/product|production|flow|consumption|ratio|feed water|clean water|ro water|coal|electricity|steam|condensate|volume|running|load/.test(n);
+ return (nonNegative &amp;&amp; v&lt;0)?null:v;
+}
+function avgRec(rec,a){let x=a.map(v=&gt;cleanValue(rec,v)).filter(v=&gt;v!=null);return x.length?x.reduce((s,v)=&gt;s+v,0)/x.length:null}
+function avg(a){let x=a.filter(v=&gt;typeof v===&#x27;number&#x27;&amp;&amp;isFinite(v));return x.length?x.reduce((s,v)=&gt;s+v,0)/x.length:null}
+function fmt(v,unit=&#x27;&#x27;){if(v==null)return &#x27;-&#x27;; if(unit.includes(&#x27;%&#x27;) &amp;&amp; Math.abs(v)&lt;=2)return (v*100).toFixed(1)+&#x27;%&#x27;; if(Math.abs(v)&gt;=1000)return v.toLocaleString(&#x27;id-ID&#x27;,{maximumFractionDigits:1}); return v.toLocaleString(&#x27;id-ID&#x27;,{maximumFractionDigits:3})}
+function targetNum(t){if(typeof t===&#x27;number&#x27;)return t; if(typeof t===&#x27;string&#x27;){let m=t.match(/-?\d+(?:\.\d+)?/);return m?+m[0]:null} return null}
+function statusOf(rec,val){if(val==null)return &#x27;neutral&#x27;; let t=rec.target, n=targetNum(t); if(n==null)return &#x27;neutral&#x27;; let s=String(t).trim();
+ if(s.includes(&#x27;-&#x27;) &amp;&amp; !s.startsWith(&#x27;-&#x27;)){let m=s.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)/);if(m)return val&gt;=+m[1]&amp;&amp;val&lt;=+m[2]?&#x27;ok&#x27;:&#x27;bad&#x27;}
+ if(s.includes(&#x27;&lt;&#x27;))return val&lt;=n?&#x27;ok&#x27;:&#x27;bad&#x27;; if(s.includes(&#x27;&gt;&#x27;))return val&gt;=n?&#x27;ok&#x27;:&#x27;bad&#x27;;
+ let name=rec.item.toLowerCase(); let highGood=/yield|recovery|return|removal|load|running/.test(name); return highGood?(val&gt;=n?&#x27;ok&#x27;:&#x27;bad&#x27;):(val&lt;=n?&#x27;ok&#x27;:&#x27;bad&#x27;)
+}
+function filtered(){let sec=$(&#x27;section&#x27;).value,st=$(&#x27;start&#x27;).value,en=$(&#x27;end&#x27;).value; let idx=DATA.dates.map((d,i)=&gt;d&gt;=st&amp;&amp;d&lt;=en?i:-1).filter(i=&gt;i&gt;=0);
+ return DATA.records.filter(r=&gt;sec===&#x27;Semua Section&#x27;||r.section===sec).map(r=&gt;({...r,sel:idx.map(i=&gt;r.values[i])}))}
+function fillMetrics(){let sec=$(&#x27;section&#x27;).value, old=$(&#x27;metric&#x27;).value; let rs=DATA.records.filter(r=&gt;sec===&#x27;Semua Section&#x27;||r.section===sec); $(&#x27;metric&#x27;).innerHTML=rs.map((r,i)=&gt;`&lt;option value=&quot;${r.section}|||${r.item}&quot;&gt;${r.section} — ${r.item}&lt;/option&gt;`).join(&#x27;&#x27;); if([...$(&#x27;metric&#x27;).options].some(o=&gt;o.value===old))$(&#x27;metric&#x27;).value=old}
+$(&#x27;section&#x27;).addEventListener(&#x27;change&#x27;,()=&gt;{fillMetrics();render()})
+function canvasSetup(id){let c=$(id),dpr=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;c.width=w*dpr;c.height=h*dpr;let x=c.getContext(&#x27;2d&#x27;);x.scale(dpr,dpr);x.clearRect(0,0,w,h);return [x,w,h]}
+function lineChart(id,labels,vals,target){let [x,w,h]=canvasSetup(id),pad={l:52,r:18,t:18,b:42},good=vals.filter(v=&gt;v!=null);if(!good.length)return;
+ let mn=Math.min(...good,target??Infinity),mx=Math.max(...good,target??-Infinity); if(mn===mx){mn-=1;mx+=1} let gap=(mx-mn)*.15;mn-=gap;mx+=gap;
+ x.strokeStyle=&#x27;#dfe7f1&#x27;;x.fillStyle=&#x27;#6b7280&#x27;;x.font=&#x27;11px Segoe UI&#x27;; for(let i=0;i&lt;5;i++){let y=pad.t+(h-pad.t-pad.b)*i/4;x.beginPath();x.moveTo(pad.l,y);x.lineTo(w-pad.r,y);x.stroke();let v=mx-(mx-mn)*i/4;x.fillText(fmt(v),4,y+4)}
+ let X=i=&gt;pad.l+(w-pad.l-pad.r)*(labels.length===1?.5:i/(labels.length-1)),Y=v=&gt;pad.t+(mx-v)/(mx-mn)*(h-pad.t-pad.b);
+ if(target!=null){x.setLineDash([6,5]);x.strokeStyle=&#x27;#c27b00&#x27;;x.beginPath();x.moveTo(pad.l,Y(target));x.lineTo(w-pad.r,Y(target));x.stroke();x.setLineDash([])}
+ x.strokeStyle=&#x27;#0b5cab&#x27;;x.lineWidth=2.5;x.beginPath();vals.forEach((v,i)=&gt;{if(v==null)return;let xx=X(i),yy=Y(v);i===0?x.moveTo(xx,yy):x.lineTo(xx,yy)});x.stroke();
+ vals.forEach((v,i)=&gt;{if(v==null)return;x.fillStyle=&#x27;#2f80ed&#x27;;x.beginPath();x.arc(X(i),Y(v),4,0,Math.PI*2);x.fill();x.fillStyle=&#x27;#6b7280&#x27;;x.fillText(labels[i].slice(5),X(i)-16,h-16)})
+}
+function barChart(id,items){let [x,w,h]=canvasSetup(id),pad=52,max=Math.max(...items.map(a=&gt;a.value),1);x.font=&#x27;11px Segoe UI&#x27;;items.forEach((a,i)=&gt;{let y=18+i*(h-35)/items.length,bh=Math.max(12,(h-55)/items.length-8),bw=(w-pad-115)*a.value/max;x.fillStyle=&#x27;#dbeafe&#x27;;x.fillRect(112,y,bw,bh);x.fillStyle=&#x27;#14213d&#x27;;x.fillText(a.name.slice(0,16),4,y+bh*.75);x.fillText(fmt(a.value),118+bw,y+bh*.75)})}
+function donut(id,ok,bad,neutral){let [x,w,h]=canvasSetup(id),cx=w/2,cy=h/2,r=Math.min(w,h)*.30,total=Math.max(ok+bad+neutral,1),arr=[[ok,&#x27;#16835d&#x27;],[bad,&#x27;#c53b3b&#x27;],[neutral,&#x27;#9aa6b2&#x27;]],a=-Math.PI/2;arr.forEach(([v,c])=&gt;{let b=a+Math.PI*2*v/total;x.beginPath();x.moveTo(cx,cy);x.arc(cx,cy,r,a,b);x.fillStyle=c;x.fill();a=b});x.beginPath();x.arc(cx,cy,r*.58,0,Math.PI*2);x.fillStyle=&#x27;white&#x27;;x.fill();x.textAlign=&#x27;center&#x27;;x.fillStyle=&#x27;#14213d&#x27;;x.font=&#x27;bold 26px Segoe UI&#x27;;x.fillText(ok+&#x27;/&#x27;+total,cx,cy+4);x.font=&#x27;12px Segoe UI&#x27;;x.fillStyle=&#x27;#6b7280&#x27;;x.fillText(&#x27;KPI sesuai&#x27;,cx,cy+24);x.textAlign=&#x27;left&#x27;}
+function compareChart(id,actual,target){let [x,w,h]=canvasSetup(id),vals=[actual??0,target??0],max=Math.max(...vals,1)*1.15,names=[&#x27;Actual&#x27;,&#x27;Target&#x27;];vals.forEach((v,i)=&gt;{let y=75+i*95,bw=(w-150)*v/max;x.fillStyle=i?&#x27;#cbd5e1&#x27;:&#x27;#2f80ed&#x27;;x.fillRect(90,y,bw,42);x.fillStyle=&#x27;#14213d&#x27;;x.font=&#x27;13px Segoe UI&#x27;;x.fillText(names[i],15,y+26);x.fillText(fmt(v),100+bw,y+26)})}
+function render(){let rs=filtered();let mv=$(&#x27;metric&#x27;).value.split(&#x27;|||&#x27;),chosen=rs.find(r=&gt;r.section===mv[0]&amp;&amp;r.item===mv[1])||rs[0];if(!chosen)return;
+ let actual=avgRec(chosen,chosen.sel),tn=targetNum(chosen.target),sts=rs.map(r=&gt;statusOf(r,avgRec(r,r.sel))),ok=sts.filter(s=&gt;s===&#x27;ok&#x27;).length,bad=sts.filter(s=&gt;s===&#x27;bad&#x27;).length,neu=sts.filter(s=&gt;s===&#x27;neutral&#x27;).length;
+ let special=[&#x27;Coal Ratio&#x27;,&#x27;Feed Water Ratio&#x27;,&#x27;Condensate Return&#x27;,&#x27;Electricity Ratio&#x27;,&#x27;COD Effluent&#x27;,&#x27;Recovery RO (&gt;)&#x27;];let cards=rs.filter(r=&gt;special.some(s=&gt;r.item.includes(s))).slice(0,6);if(cards.length&lt;6)cards=rs.slice(0,6);
+ $(&#x27;kpis&#x27;).innerHTML=cards.map(r=&gt;{let v=avgRec(r,r.sel),s=statusOf(r,v);return `&lt;div class=&quot;card kpi&quot;&gt;&lt;div class=&quot;t&quot;&gt;${r.item}&lt;/div&gt;&lt;div class=&quot;v&quot;&gt;${fmt(v,r.unit)}&lt;/div&gt;&lt;div class=&quot;s&quot;&gt;${r.unit} • Target: ${r.target??&#x27;-&#x27;} &lt;span class=&quot;badge ${s}&quot;&gt;${s===&#x27;ok&#x27;?&#x27;OK&#x27;:s===&#x27;bad&#x27;?&#x27;OUT&#x27;:&#x27;N/A&#x27;}&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;`}).join(&#x27;&#x27;);
+ let idx=DATA.dates.map((d,i)=&gt;d&gt;=$(&#x27;start&#x27;).value&amp;&amp;d&lt;=$(&#x27;end&#x27;).value?i:-1).filter(i=&gt;i&gt;=0), labels=idx.map(i=&gt;DATA.dates[i]), vals=idx.map(i=&gt;cleanValue(chosen,chosen.values[i]));
+ $(&#x27;trendTitle&#x27;).textContent=&#x27;Trend Harian — &#x27;+chosen.item;lineChart(&#x27;trend&#x27;,labels,vals,tn);barChart(&#x27;power&#x27;,DATA.power);compareChart(&#x27;compare&#x27;,actual,tn);donut(&#x27;status&#x27;,ok,bad,neu);
+ $(&#x27;tbody&#x27;).innerHTML=rs.map(r=&gt;{let v=avgRec(r,r.sel),s=statusOf(r,v),invalid=r.sel.some(x=&gt;typeof x===&#x27;number&#x27;&amp;&amp;x&lt;0&amp;&amp;cleanValue(r,x)==null);return `&lt;tr&gt;&lt;td&gt;${r.section}&lt;/td&gt;&lt;td&gt;${r.item}&lt;/td&gt;&lt;td&gt;${r.target??&#x27;-&#x27;}&lt;/td&gt;&lt;td&gt;${r.unit}&lt;/td&gt;&lt;td&gt;${fmt(v,r.unit)}${invalid?&#x27; &lt;span class=&quot;badge neutral&quot;&gt;Data minus diabaikan&lt;/span&gt;&#x27;:&#x27;&#x27;}&lt;/td&gt;&lt;td&gt;&lt;span class=&quot;badge ${s}&quot;&gt;${s===&#x27;ok&#x27;?&#x27;Sesuai&#x27;:s===&#x27;bad&#x27;?&#x27;Out of Target&#x27;:&#x27;N/A&#x27;}&lt;/span&gt;&lt;/td&gt;&lt;/tr&gt;`}).join(&#x27;&#x27;);
+}
+
+function excelDate(v){
+  if(v instanceof Date &amp;&amp; !isNaN(v)) return v.toISOString().slice(0,10);
+  if(typeof v===&#x27;number&#x27;){
+    const o=XLSX.SSF.parse_date_code(v);
+    if(o) return `${o.y}-${String(o.m).padStart(2,&#x27;0&#x27;)}-${String(o.d).padStart(2,&#x27;0&#x27;)}`;
+  }
+  if(typeof v===&#x27;string&#x27;){
+    const d=new Date(v); if(!isNaN(d)) return d.toISOString().slice(0,10);
+  }
+  return null;
+}
+function sheetVal(ws,r,c){
+  const a=XLSX.utils.encode_cell({r:r-1,c:c-1}), cell=ws[a];
+  return cell ? (cell.v!==undefined?cell.v:null) : null;
+}
+&lt;/script&gt;
+
+&lt;script&gt;
+const SOURCE=&#x27;utility&#x27;, CACHE_KEY=&#x27;wps_live_&#x27;+SOURCE;
+function applyPayload(res,fromCache){
+  if(!res||!res.data)return;
+  DATA=res.data;
+  if(SOURCE===&#x27;utility&#x27;){
+    if(DATA.dates&amp;&amp;DATA.dates.length){
+      const latest=DATA.dates[DATA.dates.length-1];
+      const a=document.getElementById(&#x27;start&#x27;),b=document.getElementById(&#x27;end&#x27;);
+      if(a)a.value=latest;if(b)b.value=latest;
+    }
+    if(typeof fillMetrics===&#x27;function&#x27;)fillMetrics();
+    if(typeof render===&#x27;function&#x27;)render();
+  }else{
+    if(typeof fill===&#x27;function&#x27;)fill();
+    const day=document.getElementById(&#x27;day&#x27;);
+    if(day&amp;&amp;DATA.length)day.value=String(DATA.length-1);
+    if(typeof render===&#x27;function&#x27;)render();
+  }
+  if(!fromCache)try{localStorage.setItem(CACHE_KEY,JSON.stringify(res))}catch(e){}
+}
+try{const c=JSON.parse(localStorage.getItem(CACHE_KEY)||&#x27;null&#x27;);if(c&amp;&amp;c.data)applyPayload(c,true)}catch(e){}
+window.addEventListener(&#x27;message&#x27;,function(e){
+  const m=e.data;
+  if(!m||m.type!==&#x27;wps-data&#x27;||m.source!==SOURCE)return;
+  try{applyPayload(m.payload,false);parent.postMessage({type:&#x27;wps-rendered&#x27;,source:SOURCE,ok:true,time:Date.now()},&#x27;*&#x27;)}
+  catch(err){parent.postMessage({type:&#x27;wps-rendered&#x27;,source:SOURCE,ok:false,error:err.message,time:Date.now()},&#x27;*&#x27;)}
+});
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe></section>
+</div>
+
+<script>
+const SOURCES=['refinery','biodiesel','fractionation','utility'];
+const LIVE={refinery:false,biodiesel:false,fractionation:false,utility:false};
+
+function showView(id,btn){
+ document.querySelectorAll('.homepage,.framebox').forEach(x=>x.style.display='none');
+ const el=document.getElementById(id); if(el)el.style.display='block';
+ document.querySelectorAll('.nav button[data-view]').forEach(x=>x.classList.remove('active'));
+ if(btn)btn.classList.add('active');
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+function setMaster(){
+ const n=Object.values(LIVE).filter(Boolean).length;
+ const b=document.getElementById('masterStatus');
+ if(b){
+   b.textContent=n===4?'● Connected 4/4':n?'● Partial '+n+'/4':'● Disconnected • Cache aktif';
+   b.style.color=n===4?'#16835d':n?'#c17a00':'#c43d3d';
+ }
+ const l=document.getElementById('lastUpdate');
+ if(l)l.textContent='Last Update: '+new Date().toLocaleString('id-ID');
+}
+function sendToFrame(source,payload){
+ const frame=document.querySelector('#'+source+' iframe');
+ if(!frame||!frame.contentWindow)throw new Error('Frame '+source+' tidak tersedia');
+ frame.contentWindow.postMessage({type:'wps-data',source:source,payload:payload},'*');
+}
+function syncOne(source){
+ google.script.run
+   .withSuccessHandler(function(res){
+      if(!res||!res.success){LIVE[source]=false;setMaster();return;}
+      try{sendToFrame(source,res)}
+      catch(e){LIVE[source]=false;setMaster();}
+   })
+   .withFailureHandler(function(){LIVE[source]=false;setMaster();})
+   .getDashboardData(source);
+}
+function syncAll(){
+ const b=document.getElementById('masterStatus');
+ if(b){b.textContent='● Synchronizing...';b.style.color='#c17a00'}
+ SOURCES.forEach((x,i)=>setTimeout(()=>syncOne(x),i*120));
+}
+window.addEventListener('message',e=>{
+ const m=e.data;
+ if(m&&m.type==='wps-rendered'&&SOURCES.includes(m.source)){LIVE[m.source]=!!m.ok;setMaster();}
+});
+window.addEventListener('load',()=>setTimeout(syncAll,1000));
+setInterval(syncAll,60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncAll()});
+</script>
+</body></html>
