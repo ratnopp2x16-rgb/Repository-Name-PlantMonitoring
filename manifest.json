@@ -8,4 +8,55 @@
 "icons":[
 {"src":"images/icon-192.png","sizes":"192x192","type":"image/png"},
 {"src":"images/icon-512.png","sizes":"512x512","type":"image/png"}]
+}const SPREADSHEET_ID='1jzPVU73kt46TcV1Uu_1G7kJGJLiIiGt9zwKNvzeyMCo';
+
+function doGet(){
+ return HtmlService.createHtmlOutputFromFile('Index')
+   .setTitle('WPS Integrated Operational Dashboard')
+   .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
+function getDashboardData(source){
+ try{
+  const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
+  source=String(source||'').toLowerCase();
+  let data;
+  if(source==='refinery')data=readRefinery_(ss);
+  else if(source==='biodiesel')data=readBiodiesel_(ss);
+  else if(source==='fractionation')data=readFractionation_(ss);
+  else if(source==='utility')data=readUtility_(ss);
+  else throw new Error('Source tidak dikenal: '+source);
+  return {success:true,source:source,timestamp:new Date().toISOString(),data:data};
+ }catch(e){return {success:false,source:source,timestamp:new Date().toISOString(),error:e.message}}
+}
+function rows_(ss,name){
+ const sh=ss.getSheetByName(name); if(!sh)throw new Error('Sheet "'+name+'" tidak ditemukan');
+ const v=sh.getDataRange().getValues();
+ const hr=v.findIndex(r=>['Sheet','Section'].includes(String(r[0]).trim()));
+ if(hr<0)throw new Error('Header sheet "'+name+'" tidak ditemukan');
+ const h=v[hr].map(x=>String(x).trim());
+ return v.slice(hr+1).filter(r=>r.some(x=>x!==''&&x!=null)).map(r=>{const o={};h.forEach((x,i)=>{if(x)o[x]=r[i]});return o});
+}
+function n_(v){return typeof v==='number'&&isFinite(v)?v:(v===''||v==null?null:(isNaN(Number(v))?null:Number(v)))}
+function s_(v){return v==null?'':String(v)}
+function rem_(v){return s_(v).split(/\s*\|\s*/).filter(Boolean)}
+function readRefinery_(ss){return rows_(ss,'Refinery').map(r=>({sheet:s_(r['Sheet']),date:s_(r['Date']),cpo:n_(r['CPO Feed (MT)']),rbdpo:n_(r['RBDPO (MT)']),pfad:n_(r['PFAD (MT)']),yield_rbdpo:n_(r['Yield RBDPO']),target_rbdpo:n_(r['Target RBDPO']),yield_pfad:n_(r['Yield PFAD']),target_pfad:n_(r['Target PFAD']),run:n_(r['Running (h)']),down:n_(r['Downtime (h)']),cons:{BE:n_(r['BE']),PA:n_(r['PA']),Fuel:n_(r['Fuel']),Power:n_(r['Power']),Water:n_(r['Water']),Steam:n_(r['Steam'])},remarks:rem_(r['Remarks'])}))}
+function readBiodiesel_(ss){
+ return rows_(ss,'Biodiesel').map(r=>{const prod={},cons={},util={};
+ Object.keys(r).forEach(h=>{let m=h.match(/^(.*?) (Total|Yield|Target)$/);if(m&&['RPO/RPS/RPOL','FAME','Crude Glycerine','Fatty Matter'].includes(m[1])){prod[m[1]]=prod[m[1]]||{};prod[m[1]][m[2].toLowerCase()]=n_(r[h])}
+ m=h.match(/^(.*?) (DTD|Ratio|Target)$/);if(m&&!['RPO/RPS/RPOL','FAME','Crude Glycerine','Fatty Matter'].includes(m[1])){cons[m[1]]=cons[m[1]]||{};cons[m[1]][m[2].toLowerCase()]=n_(r[h])}});
+ const um=[['Power PLANT (KW)','Power','KW/MT RPO'],['Steam (MT)','Steam','Kg/MT RPO'],['FM Make up CT (m3)','Non RO Water','M3/MT RPO'],['FM Process Water (m3)','RO Water','M3/MT RPO']];
+ um.forEach(x=>{const z=cons[x[1]];if(z)util[x[0]]={usage:z.dtd,ratio:x[1]==='Steam'&&z.ratio!=null?z.ratio*1000:z.ratio,target:z.target,unit:x[2]}});
+ return {sheet:s_(r['Sheet']),date:s_(r['Date']),prod:prod,run:n_(r['Running (h)']),run_min:n_(r['Running (min)']),down:n_(r['Downtime (h)']),down_min:n_(r['Downtime (min)']),cons:cons,util:util,remarks:rem_(r['Remarks'])}})}
+function readFractionation_(ss){
+ return rows_(ss,'Fractionation').map(r=>{const prod={},util={};Object.keys(r).forEach(h=>{let m=h.match(/^(.*?) (Qty|Yield|Target)$/);if(m){prod[m[1]]=prod[m[1]]||{};prod[m[1]][m[2].toLowerCase()]=n_(r[h])}m=h.match(/^(.*?) (Usage|Ratio|Target|Unit)$/);if(m){util[m[1]]=util[m[1]]||{};util[m[1]][m[2].toLowerCase()]=m[2]==='Unit'?s_(r[h]):n_(r[h])}});
+ return {sheet:s_(r['Sheet']),date:s_(r['Date']),prod:prod,run:n_(r['Running (h)']),runmin:n_(r['Running (min)']),down:n_(r['Downtime (h)']),downmin:n_(r['Downtime (min)']),quality:{},util:util,remarks:rem_(r['Remarks'])}})}
+function readUtility_(ss){
+ const sh=ss.getSheetByName('Utility');if(!sh)throw new Error('Sheet "Utility" tidak ditemukan');
+ const v=sh.getDataRange().getValues(),hr=v.findIndex(r=>String(r[0]).trim()==='Section');
+ if(hr<0)throw new Error('Header Utility tidak ditemukan');
+ const h=v[hr].map(x=>String(x).trim()),dates=h.slice(4).filter(Boolean);
+ const records=v.slice(hr+1).filter(r=>r.some(x=>x!==''&&x!=null)).map(r=>({section:s_(r[0]),item:s_(r[1]),target:n_(r[2]),unit:s_(r[3]),values:dates.map((d,i)=>n_(r[i+4]))}));
+ let power=[];const ps=ss.getSheetByName('Utility Power');if(ps){const p=ps.getDataRange().getValues(),ph=p.findIndex(r=>String(r[0]).trim()==='Name');if(ph>=0)power=p.slice(ph+1).filter(r=>r[0]).map(r=>({name:s_(r[0]),value:n_(r[1])}))}
+ return {dates:dates,records:records,power:power};
+}
+function testDashboardData(){['refinery','biodiesel','fractionation','utility'].forEach(x=>Logger.log(JSON.stringify(getDashboardData(x)).slice(0,400)))}
